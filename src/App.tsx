@@ -9,6 +9,7 @@ import type { Session } from "@supabase/supabase-js";
 
 import ProfileHeader from "./components/ProfileHeader";
 import LinkButton from "./components/LinkButton";
+ import ProfileSetup from './components/ProfileSetup';
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -187,6 +188,14 @@ function App() {
         <section>
           <h1>Vamos criar o seu perfil?</h1>
           <p>Sua conta esta pronta, mas seu perfil ainda nao foi configurado.</p>
+
+          {userId && (
+            <ProfileSetup 
+              key={userId}
+              userId={userId}
+              onCreated={setUserProfile}
+            />
+          )}
         </section>
       ) : (
         <>
