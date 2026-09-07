@@ -9,6 +9,7 @@ import ProfileHeader from "./components/ProfileHeader";
 import LinkButton from "./components/LinkButton";
 
 import Login from "./pages/Login";
+import Register from "./pages/Register";
 
 import { Link, Navigate, Route, Routes} from "react-router-dom";
 
@@ -191,6 +192,11 @@ function App() {
       <Route 
       path="/login"
       element={<Login />}
+      />
+
+      <Route 
+      path="/register"
+      element={<Register />}
       />
 
     </Routes>
