@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./lib/supabase";
+
 import type { Profile } from "./types/profile";
 import type { ProfileLink } from "./types/link";
+
 import ProfileHeader from "./components/ProfileHeader";
+import LinkButton from "./components/LinkButton";
 
 const profile: Profile = {
   username: "luisgleite",
@@ -46,14 +49,12 @@ function App() {
   }, []);
 
   return (
-    <main>
+    <main className="profile-page">
       <ProfileHeader profile={profile} />
       
-      <nav aria-label="Links do perfil">
+      <nav className="profile-links" aria-label="Links do perfil">
         {links.map((link) => (
-          <a key={link.id} href={link.url}>
-            {link.title}
-          </a>
+          <LinkButton key={link.id} link={link} />
         ))}
       </nav>
 
