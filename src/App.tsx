@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./lib/supabase";
 import type { Profile } from "./types/profile";
+import ProfileHeader from "./components/ProfileHeader";
 
 const profile: Profile = {
   username: "luisgleite",
@@ -31,9 +32,7 @@ function App() {
 
   return (
     <main>
-      <h1>{profile.displayName}</h1>
-      <p>@{profile.username}</p>
-      <p>{profile.bio}</p>
+      <ProfileHeader profile={profile} />
 
       <p>{status}</p>
     </main>
