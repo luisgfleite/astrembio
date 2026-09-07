@@ -8,6 +8,8 @@ import type { FormEvent } from "react";
 import ProfileHeader from "./components/ProfileHeader";
 import LinkButton from "./components/LinkButton";
 
+import { Link, Navigate, Route, Routes} from "react-router-dom";
+
 const profile: Profile = {
   username: "luisgleite",
   displayName: "Luis Gustavo",
@@ -97,8 +99,13 @@ function App() {
     testConnection();
   }, []);
 
-  return (
+  const dashboard = (
     <main className="profile-page">
+      <p>
+        <Link to={`/@${profile.username}`}>
+          Abrir pagina publica
+        </Link>
+      </p>
       <button className="mode-button" type="button" onClick={() => setIsEditing((current) => !current)}>
         {isEditing ? "Visualizar perfil" : "Voltar à edição"}
       </button>
@@ -151,6 +158,35 @@ function App() {
       
     </main>
   );
+
+  return (
+    <Routes>
+      <Route 
+        path="/"
+        element={<Navigate to="/dashboard" replace />}
+      />
+
+      <Route 
+        path="/dashboard"
+        element={dashboard}
+      />
+
+      <Route 
+        path={`/@${profile.username}`}
+        element={
+          <main className="profile-page">
+            <ProfileHeader profile={profile} />
+
+            <nav className="profile-links" aria-label="Links do perfil">
+              {links.map((link) => (
+                <LinkButton key={link.id} link={link} />
+              ))}
+            </nav>
+          </main>
+        }
+      />
+    </Routes>
+  )
 }
 
 export default App;
