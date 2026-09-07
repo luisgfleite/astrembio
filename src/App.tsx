@@ -4,6 +4,7 @@ import { supabase } from "./lib/supabase";
 import type { Profile } from "./types/profile";
 import type { ProfileLink } from "./types/link";
 import type { FormEvent } from "react";
+import type { Session } from "@supabase/supabase-js";
 
 import ProfileHeader from "./components/ProfileHeader";
 import LinkButton from "./components/LinkButton";
@@ -35,11 +36,17 @@ const initialLinks: ProfileLink[] = [
 
 function App() {
   const [links, setLinks] = useState<ProfileLink[]>(initialLinks);
-  const [status, setStatus] = useState("Testando conexão...");
   const [title, setTitle ] = useState("");
   const [url, setUrl ] = useState("");
+
   const [formError, setFormError ] = useState("");
+  
   const [isEditing, setIsEditing] = useState(true);
+  
+  const [session, setSession] = useState<Session | null>(null);
+  const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [logoutError, setLogoutError] = useState("");
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   function removeLink(id: string) {
     setLinks((currentLinks) =>
@@ -85,25 +92,47 @@ function App() {
   }
 
   useEffect(() => {
-    async function testConnection() {
-      const { error } = await supabase
-        .from("profiles")
-        .select("id")
-        .limit(1);
-
-      if (error && error.code !== "42P01") {
-        setStatus(`Erro: ${error.message}`);
-        return;
+    const { data } = supabase.auth.onAuthStateChange(
+      (_event, currentSession) => {
+        setSession(currentSession);
+        setIsAuthLoading(false);
       }
+    );
 
-      setStatus("Supabase conectado.");
+    return () => {
+      data.subscription.unsubscribe();
     }
-
-    testConnection();
   }, []);
+
+  async function handleLogout() {
+    setLogoutError("");
+    setIsLoggingOut(true);
+
+    try {
+      const { error } = await supabase.auth.signOut({
+        scope: "local",
+      });
+
+      if (error) {
+        setLogoutError(error.message);
+      }
+    } catch {
+      setLogoutError("Nao foi possivel sair. Tente novamente.");
+    } finally {
+      setIsLoggingOut(false);
+    }
+  }
 
   const dashboard = (
     <main className="profile-page">
+      <button
+        className="mode-button"
+        type="button"
+        onClick={handleLogout}
+        disabled={isLoggingOut}
+      >
+        {isLoggingOut ? "Saindo..." : "Sair"}
+      </button>
       <p>
         <Link to={`/@${profile.username}`}>
           Abrir pagina publica
@@ -162,6 +191,13 @@ function App() {
     </main>
   );
 
+  if (isAuthLoading) {
+    return (
+      <main className="profile-page">
+        <p role="status">Carregando...</p>
+      </main>
+    );
+  }
   return (
     <Routes>
       <Route 
@@ -171,7 +207,9 @@ function App() {
 
       <Route 
         path="/dashboard"
-        element={dashboard}
+        element={
+          session ? dashboard : <Navigate to="/login" replace />
+        }
       />
 
       <Route 
