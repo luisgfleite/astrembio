@@ -133,6 +133,7 @@ function App() {
       >
         {isLoggingOut ? "Saindo..." : "Sair"}
       </button>
+      {logoutError && <p role="alert">{logoutError}</p>}
       <p>
         <Link to={`/@${profile.username}`}>
           Abrir pagina publica
