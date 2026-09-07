@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./lib/supabase";
+
 import { getProfile } from "./services/profiles";
+import { getLinks, createLink, deleteLink } from "./services/links";
 
 import type { Profile } from "./types/profile";
 import type { ProfileLink } from "./types/link";
@@ -9,7 +11,7 @@ import type { Session } from "@supabase/supabase-js";
 
 import ProfileHeader from "./components/ProfileHeader";
 import LinkButton from "./components/LinkButton";
- import ProfileSetup from './components/ProfileSetup';
+import ProfileSetup from './components/ProfileSetup';
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -37,7 +39,8 @@ const initialLinks: ProfileLink[] = [
 ]
 
 function App() {
-  const [links, setLinks] = useState<ProfileLink[]>(initialLinks);
+  const [links, setLinks] = useState<ProfileLink[]>([]);
+  const [isUpdatingLinks, setIsUpdatingLinks] = useState(false);
   const [title, setTitle ] = useState("");
   const [url, setUrl ] = useState("");
 
@@ -56,21 +59,40 @@ function App() {
 
   const userId = session?.user.id;
 
-  function removeLink(id: string) {
-    setLinks((currentLinks) =>
-      currentLinks.filter((link) => link.id !== id)
-    );
+  async function removeLink(id: string) {
+    if (!userId || isUpdatingLinks) {
+      return;
+    }
+
+    setFormError("");
+    setIsUpdatingLinks(true);
+
+    try {
+      await deleteLink(userId, id);
+
+      setLinks((currentLinks) => currentLinks.filter((link) => link.id !== id));
+
+    } catch {
+      setFormError("Nao foi possivel deleter o link, tente novamente.")
+    } finally {
+      setIsUpdatingLinks(false);
+    }
   }
 
-  function addLink(event: FormEvent<HTMLFormElement>) {
+  async function addLink(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    
+    if (!userId || !userProfile || isUpdatingLinks) {
+      return
+    }
+    
     setFormError("");
 
     const cleanTitle = title.trim();
     const cleanUrl = url.trim();
 
-    if (!cleanTitle) {
-      setFormError("Informe o tituto do link.");
+    if (!cleanTitle || cleanTitle.length > 100) {
+      setFormError("Informe o tituto do link com 1 ou 100 caracteres");
       return;
     }
 
@@ -86,16 +108,22 @@ function App() {
       return
     }
 
-    const newLink: ProfileLink = {
-      id: crypto.randomUUID(),
-      title: cleanTitle,
-      url: cleanUrl,
+    setIsUpdatingLinks(true);
+
+    try {
+      const savedLink = await createLink(userId, {
+        title: cleanTitle,
+        url: cleanUrl,
+      });
+
+      setLinks((currentLinks) => [...currentLinks, savedLink]);
+      setTitle("");
+      setUrl("");
+    } catch {
+      setFormError("Nao foi possivel salvar o link. Tente novamente");
+    } finally {
+      setIsUpdatingLinks(false);
     }
-
-    setLinks((currentLinks) => [...currentLinks, newLink]);
-
-    setTitle("");
-    setUrl("");
 
   }
 
@@ -119,6 +147,11 @@ function App() {
     setProfileError("");
     setLoadedUserId(null);
 
+    setLinks([]);
+    setFormError("");
+    setTitle("");
+    setUrl("");
+
     if (!userId) {
       return;
     }
@@ -126,10 +159,13 @@ function App() {
     async function loadProfile(id: string) {
       try {
         const profile = await getProfile(id);
+        const savedLinks = profile ? await getLinks(id) : [];
 
         if (!cancelled) {
           setUserProfile(profile);
+          setLinks(savedLinks);
         }
+
 
       } catch {
         if (!cancelled) {
@@ -174,7 +210,7 @@ function App() {
         className="mode-button"
         type="button"
         onClick={handleLogout}
-        disabled={isLoggingOut}
+        disabled={isLoggingOut || isUpdatingLinks}
       >
         {isLoggingOut ? "Saindo..." : "Sair"}
       </button>
@@ -209,7 +245,7 @@ function App() {
                 <LinkButton link={link} />
 
                 {isEditing && (
-                  <button className="remove-button" type="button" onClick={() => removeLink(link.id)}>
+                  <button className="remove-button" type="button" onClick={() => removeLink(link.id)} disabled={isUpdatingLinks}>
                     Remover {link.title}
                   </button>
                 )}
@@ -238,10 +274,10 @@ function App() {
                 onChange={(event) => setUrl(event.target.value)}
                 required
               />
+              <button type="submit" disabled={isUpdatingLinks}>
+                {isUpdatingLinks ? "Aguarde..." : "Adicionar link"}
+              </button>
 
-              {formError && <p role="alert">{formError}</p>}
-
-              <button type="submit">Adicionar link</button>
             </form>
           )}
         </>
@@ -275,6 +311,12 @@ function App() {
         element={
           <main className="profile-page">
             <ProfileHeader profile={profile} />
+            
+            {formError && <p role="alert">{formError}</p>}
+
+            {links.length === 0 && (
+              <p>Você ainda não adicionou links ao seu perfil.</p>
+            )}
 
             <nav className="profile-links" aria-label="Links do perfil">
               {links.map((link) => (
