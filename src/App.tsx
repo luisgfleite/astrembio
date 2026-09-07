@@ -34,6 +34,7 @@ function App() {
   const [title, setTitle ] = useState("");
   const [url, setUrl ] = useState("");
   const [formError, setFormError ] = useState("");
+  const [isEditing, setIsEditing] = useState(true);
 
   function removeLink(id: string) {
     setLinks((currentLinks) =>
@@ -98,6 +99,9 @@ function App() {
 
   return (
     <main className="profile-page">
+      <button className="mode-button" type="button" onClick={() => setIsEditing((current) => !current)}>
+        {isEditing ? "Visualizar perfil" : "Voltar à edição"}
+      </button>
       <ProfileHeader profile={profile} />
       
       <nav className="profile-links" aria-label="Links do perfil">
@@ -105,41 +109,46 @@ function App() {
           <div key={link.id}>
             <LinkButton link={link} />
 
-            <button className="remove-button" type="button" onClick={() => removeLink(link.id)}>
-              Remover {link.title}
-            </button>
+            {isEditing && (
+              <button className="remove-button" type="button" onClick={() => removeLink(link.id)}>
+                Remover {link.title}
+              </button>
+            )}
+
           </div>
         ))}
       </nav>
       
-      <form className="link-form" onSubmit={addLink}>
-        <h2>Adicionar Links</h2>
+      {isEditing && (
+        <form className="link-form" onSubmit={addLink}>
+          <h2>Adicionar Links</h2>
 
-        <label htmlFor="link-title">Titulo</label>
-        <input
-          id="link-title"
-          type="text"
-          value={title}
-          onChange={(event) => setTitle(event.target.value)}
-          required
-        />
+          <label htmlFor="link-title">Titulo</label>
+          <input
+            id="link-title"
+            type="text"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            required
+          />
 
-        <label htmlFor="link-url">Endereço</label>
-        <input
-          id="link-url"
-          type="url"
-          value={url}
-          placeholder="https://"
-          onChange={(event) => setUrl(event.target.value)}
-          required
-        />
+          <label htmlFor="link-url">Endereço</label>
+          <input
+            id="link-url"
+            type="url"
+            value={url}
+            placeholder="https://"
+            onChange={(event) => setUrl(event.target.value)}
+            required
+          />
 
-        {formError && <p role="alert">{formError}</p>}
+          {formError && <p role="alert">{formError}</p>}
 
-        <button type="submit">Adicionar link</button>
+          <button type="submit">Adicionar link</button>
 
-      </form>
-      <p>{status}</p>
+        </form>
+      )}
+      
     </main>
   );
 }
