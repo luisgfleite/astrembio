@@ -105,14 +105,14 @@ function App() {
           <div key={link.id}>
             <LinkButton link={link} />
 
-            <button type="button" onClick={() => removeLink(link.id)}>
+            <button className="remove-button" type="button" onClick={() => removeLink(link.id)}>
               Remover {link.title}
             </button>
           </div>
         ))}
       </nav>
       
-      <form onSubmit={addLink}>
+      <form className="link-form" onSubmit={addLink}>
         <h2>Adicionar Links</h2>
 
         <label htmlFor="link-title">Titulo</label>
@@ -124,6 +124,7 @@ function App() {
           required
         />
 
+        <label htmlFor="link-url">Endereço</label>
         <input
           id="link-url"
           type="url"
