@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./lib/supabase";
+import { getProfile } from "./services/profiles";
 
 import type { Profile } from "./types/profile";
 import type { ProfileLink } from "./types/link";
@@ -12,7 +13,7 @@ import LinkButton from "./components/LinkButton";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 
-import { Link, Navigate, Route, Routes} from "react-router-dom";
+import { Navigate, Route, Routes} from "react-router-dom";
 
 const profile: Profile = {
   username: "luisgleite",
@@ -47,6 +48,12 @@ function App() {
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [logoutError, setLogoutError] = useState("");
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+
+  const [userProfile, setUserProfile] = useState<Profile | null>(null);
+  const [profileError, setProfileError] = useState("");
+  const [loadedUserId, setLoadedUserId] = useState<string | null>(null);
+
+  const userId = session?.user.id;
 
   function removeLink(id: string) {
     setLinks((currentLinks) =>
@@ -104,6 +111,43 @@ function App() {
     }
   }, []);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    setUserProfile(null);
+    setProfileError("");
+    setLoadedUserId(null);
+
+    if (!userId) {
+      return;
+    }
+
+    async function loadProfile(id: string) {
+      try {
+        const profile = await getProfile(id);
+
+        if (!cancelled) {
+          setUserProfile(profile);
+        }
+
+      } catch {
+        if (!cancelled) {
+          setProfileError("Nao foi possivel carregar o perfil.");
+        }
+      } finally {
+        if (!cancelled) {
+          setLoadedUserId(id);
+        }
+      }
+    }
+
+    loadProfile(userId);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [userId]);
+
   async function handleLogout() {
     setLogoutError("");
     setIsLoggingOut(true);
@@ -134,61 +178,65 @@ function App() {
         {isLoggingOut ? "Saindo..." : "Sair"}
       </button>
       {logoutError && <p role="alert">{logoutError}</p>}
-      <p>
-        <Link to={`/@${profile.username}`}>
-          Abrir pagina publica
-        </Link>
-      </p>
-      <button className="mode-button" type="button" onClick={() => setIsEditing((current) => !current)}>
-        {isEditing ? "Visualizar perfil" : "Voltar à edição"}
-      </button>
-      <ProfileHeader profile={profile} />
-      
-      <nav className="profile-links" aria-label="Links do perfil">
-        {links.map((link) => (
-          <div key={link.id}>
-            <LinkButton link={link} />
+      {loadedUserId !== userId ? (
+        <p role="status">Carregando seu perfil...</p>
 
-            {isEditing && (
-              <button className="remove-button" type="button" onClick={() => removeLink(link.id)}>
-                Remover {link.title}
-              </button>
-            )}
+      ) : profileError ? (
+        <p role="alert">{profileError}</p>
+      ) : !userProfile ? (
+        <section>
+          <h1>Vamos criar o seu perfil?</h1>
+          <p>Sua conta esta pronta, mas seu perfil ainda nao foi configurado.</p>
+        </section>
+      ) : (
+        <>
+          <button className="mode-button" type="button" onClick={() => setIsEditing((current) => !current)}>
+            {isEditing ? "Visualizar perfil" : "Voltar à edição"}
+          </button>
+          <ProfileHeader profile={userProfile} />
+          <nav className="profile-links" aria-label="Links do perfil">
+            {links.map((link) => (
+              <div key={link.id}>
+                <LinkButton link={link} />
 
-          </div>
-        ))}
-      </nav>
-      
-      {isEditing && (
-        <form className="link-form" onSubmit={addLink}>
-          <h2>Adicionar Links</h2>
+                {isEditing && (
+                  <button className="remove-button" type="button" onClick={() => removeLink(link.id)}>
+                    Remover {link.title}
+                  </button>
+                )}
+              </div>
+            ))}
+          </nav>
+          {isEditing && (
+            <form className="link-form" onSubmit={addLink}>
+              <h2>Adicionar Links</h2>
 
-          <label htmlFor="link-title">Titulo</label>
-          <input
-            id="link-title"
-            type="text"
-            value={title}
-            onChange={(event) => setTitle(event.target.value)}
-            required
-          />
+              <label htmlFor="link-title">Titulo</label>
+              <input
+                id="link-title"
+                type="text"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                required
+              />
 
-          <label htmlFor="link-url">Endereço</label>
-          <input
-            id="link-url"
-            type="url"
-            value={url}
-            placeholder="https://"
-            onChange={(event) => setUrl(event.target.value)}
-            required
-          />
+              <label htmlFor="link-url">Endereço</label>
+              <input
+                id="link-url"
+                type="url"
+                value={url}
+                placeholder="https://"
+                onChange={(event) => setUrl(event.target.value)}
+                required
+              />
 
-          {formError && <p role="alert">{formError}</p>}
+              {formError && <p role="alert">{formError}</p>}
 
-          <button type="submit">Adicionar link</button>
-
-        </form>
+              <button type="submit">Adicionar link</button>
+            </form>
+          )}
+        </>
       )}
-      
     </main>
   );
 
