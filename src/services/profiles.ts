@@ -49,3 +49,29 @@ export async function createProfile(userId: string, profile: Profile): Promise<P
         avatarUrl: data.avatar_url
     };
 }
+
+export async function getProfileByUsername(username: string): Promise<(Profile & {id:string}) | null> {
+    const {data, error} = await supabase
+        .from("profiles")
+        .select("id, username, display_name, bio, avatar_url")
+        .eq("username", username.toLowerCase())
+        .maybeSingle();
+    
+    if(error) {
+        throw error;
+    }
+
+    if (!data) {
+        return null;
+    }
+
+    return {
+        id: data.id,
+        username: data.username,
+        displayName: data.display_name,
+        bio: data.bio,
+        avatarUrl: data.avatar_url,
+    };
+
+    
+}
