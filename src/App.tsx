@@ -11,10 +11,10 @@ const profile: Profile = {
   username: "luisgleite",
   displayName: "Luis Gustavo",
   bio: "Desenvolvedor Full-stack",
-  avatarUrl: "",
+  avatarUrl: "https://i.pinimg.com/736x/92/43/75/924375a346cf364596413aeecf102f13.jpg",
 }
 
-const links: ProfileLink[] = [
+const initialLinks: ProfileLink[] = [
   {
     id: "1",
     title: "Meu GitHub",
@@ -28,7 +28,14 @@ const links: ProfileLink[] = [
 ]
 
 function App() {
+  const [links, setLinks] = useState<ProfileLink[]>(initialLinks);
   const [status, setStatus] = useState("Testando conexão...");
+
+  function removeLink(id: string) {
+    setLinks((currentLinks) =>
+      currentLinks.filter((link) => link.id !== id)
+    );
+  }
 
   useEffect(() => {
     async function testConnection() {
@@ -54,7 +61,13 @@ function App() {
       
       <nav className="profile-links" aria-label="Links do perfil">
         {links.map((link) => (
-          <LinkButton key={link.id} link={link} />
+          <div key={link.id}>
+            <LinkButton link={link} />
+
+            <button type="button" onClick={() => removeLink(link.id)}>
+              Remover {link.title}
+            </button>
+          </div>
         ))}
       </nav>
 
