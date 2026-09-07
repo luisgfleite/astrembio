@@ -239,8 +239,13 @@ function App() {
             {isEditing ? "Visualizar perfil" : "Voltar à edição"}
           </button>
           <ProfileHeader profile={userProfile} />
+          {formError && <p role="alert">{formError}</p>}
+
+          {links.length === 0 && (
+            <p>Você ainda não adicionou links ao seu perfil.</p>
+          )}
           <nav className="profile-links" aria-label="Links do perfil">
-            {links.map((link) => (
+            {initialLinks.map((link) => (
               <div key={link.id}>
                 <LinkButton link={link} />
 
@@ -262,6 +267,7 @@ function App() {
                 type="text"
                 value={title}
                 onChange={(event) => setTitle(event.target.value)}
+                disabled={isUpdatingLinks}
                 required
               />
 
@@ -272,6 +278,7 @@ function App() {
                 value={url}
                 placeholder="https://"
                 onChange={(event) => setUrl(event.target.value)}
+                disabled={isUpdatingLinks}
                 required
               />
               <button type="submit" disabled={isUpdatingLinks}>
@@ -311,15 +318,9 @@ function App() {
         element={
           <main className="profile-page">
             <ProfileHeader profile={profile} />
-            
-            {formError && <p role="alert">{formError}</p>}
-
-            {links.length === 0 && (
-              <p>Você ainda não adicionou links ao seu perfil.</p>
-            )}
 
             <nav className="profile-links" aria-label="Links do perfil">
-              {links.map((link) => (
+              {initialLinks.map((link) => (
                 <LinkButton key={link.id} link={link} />
               ))}
             </nav>
