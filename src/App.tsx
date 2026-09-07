@@ -1,6 +1,13 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./lib/supabase";
+import type { Profile } from "./types/profile";
 
+const profile: Profile = {
+  username: "luisgleite",
+  displayName: "Luis Gustavo",
+  bio: "Desenvolvedor Full-stack",
+  avatarUrl: "",
+}
 function App() {
   const [status, setStatus] = useState("Testando conexão...");
 
@@ -24,7 +31,10 @@ function App() {
 
   return (
     <main>
-      <h1>Astrembio</h1>
+      <h1>{profile.displayName}</h1>
+      <p>@{profile.username}</p>
+      <p>{profile.bio}</p>
+
       <p>{status}</p>
     </main>
   );
