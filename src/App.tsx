@@ -8,6 +8,8 @@ import type { FormEvent } from "react";
 import ProfileHeader from "./components/ProfileHeader";
 import LinkButton from "./components/LinkButton";
 
+import Login from "./pages/Login";
+
 import { Link, Navigate, Route, Routes} from "react-router-dom";
 
 const profile: Profile = {
@@ -185,6 +187,12 @@ function App() {
           </main>
         }
       />
+
+      <Route 
+      path="/login"
+      element={<Login />}
+      />
+
     </Routes>
   )
 }

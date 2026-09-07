@@ -118,6 +118,11 @@ body {
   background: #c4b5fb;
 }
 
+.link-form button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .remove-button {
   margin-top: 8px;
   padding: 8px 12px;
