@@ -3,6 +3,7 @@ import { supabase } from "./lib/supabase";
 
 import type { Profile } from "./types/profile";
 import type { ProfileLink } from "./types/link";
+import type { FormEvent } from "react";
 
 import ProfileHeader from "./components/ProfileHeader";
 import LinkButton from "./components/LinkButton";
@@ -30,11 +31,51 @@ const initialLinks: ProfileLink[] = [
 function App() {
   const [links, setLinks] = useState<ProfileLink[]>(initialLinks);
   const [status, setStatus] = useState("Testando conexão...");
+  const [title, setTitle ] = useState("");
+  const [url, setUrl ] = useState("");
+  const [formError, setFormError ] = useState("");
 
   function removeLink(id: string) {
     setLinks((currentLinks) =>
       currentLinks.filter((link) => link.id !== id)
     );
+  }
+
+  function addLink(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setFormError("");
+
+    const cleanTitle = title.trim();
+    const cleanUrl = url.trim();
+
+    if (!cleanTitle) {
+      setFormError("Informe o tituto do link.");
+      return;
+    }
+
+    try {
+      const parsedUrl = new URL(cleanUrl);
+
+      if ( parsedUrl.protocol !== "https:" && parsedUrl.protocol !== "http:" ) {
+        setFormError("Use uma url que comece com http ou https");
+        return
+      }
+    } catch {
+      setFormError("Informe uma url valida");
+      return
+    }
+
+    const newLink: ProfileLink = {
+      id: crypto.randomUUID(),
+      title: cleanTitle,
+      url: cleanUrl,
+    }
+
+    setLinks((currentLinks) => [...currentLinks, newLink]);
+
+    setTitle("");
+    setUrl("");
+
   }
 
   useEffect(() => {
@@ -70,7 +111,33 @@ function App() {
           </div>
         ))}
       </nav>
+      
+      <form onSubmit={addLink}>
+        <h2>Adicionar Links</h2>
 
+        <label htmlFor="link-title">Titulo</label>
+        <input
+          id="link-title"
+          type="text"
+          value={title}
+          onChange={(event) => setTitle(event.target.value)}
+          required
+        />
+
+        <input
+          id="link-url"
+          type="url"
+          value={url}
+          placeholder="https://"
+          onChange={(event) => setUrl(event.target.value)}
+          required
+        />
+
+        {formError && <p role="alert">{formError}</p>}
+
+        <button type="submit">Adicionar link</button>
+
+      </form>
       <p>{status}</p>
     </main>
   );
