@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "./lib/supabase";
 import type { Profile } from "./types/profile";
+import type { ProfileLink } from "./types/link";
 import ProfileHeader from "./components/ProfileHeader";
 
 const profile: Profile = {
@@ -9,6 +10,20 @@ const profile: Profile = {
   bio: "Desenvolvedor Full-stack",
   avatarUrl: "",
 }
+
+const links: ProfileLink[] = [
+  {
+    id: "1",
+    title: "Meu GitHub",
+    url: "https://github.com/luisgfleite",
+  },
+  {
+    id: "2",
+    title: "Astremfy",
+    url: "https://astremfy.com/",
+  },
+]
+
 function App() {
   const [status, setStatus] = useState("Testando conexão...");
 
@@ -33,6 +48,14 @@ function App() {
   return (
     <main>
       <ProfileHeader profile={profile} />
+      
+      <nav aria-label="Links do perfil">
+        {links.map((link) => (
+          <a key={link.id} href={link.url}>
+            {link.title}
+          </a>
+        ))}
+      </nav>
 
       <p>{status}</p>
     </main>
