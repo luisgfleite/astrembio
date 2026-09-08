@@ -15,28 +15,9 @@ import ProfileSetup from './components/ProfileSetup';
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
+import PublicProfile from "./pages/PublicProfile";
 
-import { Navigate, Route, Routes} from "react-router-dom";
-
-const profile: Profile = {
-  username: "luisgleite",
-  displayName: "Luis Gustavo",
-  bio: "Desenvolvedor Full-stack",
-  avatarUrl: "https://i.pinimg.com/736x/92/43/75/924375a346cf364596413aeecf102f13.jpg",
-}
-
-const initialLinks: ProfileLink[] = [
-  {
-    id: "1",
-    title: "Meu GitHub",
-    url: "https://github.com/luisgfleite",
-  },
-  {
-    id: "2",
-    title: "Astremfy",
-    url: "https://astremfy.com/",
-  },
-]
+import { Link, Navigate, Route, Routes} from "react-router-dom";
 
 function App() {
   const [links, setLinks] = useState<ProfileLink[]>([]);
@@ -239,13 +220,18 @@ function App() {
             {isEditing ? "Visualizar perfil" : "Voltar à edição"}
           </button>
           <ProfileHeader profile={userProfile} />
+          <p>
+            <Link to={`/@${userProfile.username}`}>
+              Abrir página pública
+            </Link>
+          </p>
           {formError && <p role="alert">{formError}</p>}
 
           {links.length === 0 && (
             <p>Você ainda não adicionou links ao seu perfil.</p>
           )}
           <nav className="profile-links" aria-label="Links do perfil">
-            {initialLinks.map((link) => (
+            {links.map((link) => (
               <div key={link.id}>
                 <LinkButton link={link} />
 
@@ -313,20 +299,7 @@ function App() {
         }
       />
 
-      <Route 
-        path={`/@${profile.username}`}
-        element={
-          <main className="profile-page">
-            <ProfileHeader profile={profile} />
-
-            <nav className="profile-links" aria-label="Links do perfil">
-              {initialLinks.map((link) => (
-                <LinkButton key={link.id} link={link} />
-              ))}
-            </nav>
-          </main>
-        }
-      />
+      <Route path="/:handle" element={<PublicProfile />} />
 
       <Route 
       path="/login"
